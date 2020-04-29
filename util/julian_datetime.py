@@ -1,3 +1,4 @@
+""" Taken from https://stackoverflow.com/a/52431241/5616591 """
 import datetime
 import math
 
