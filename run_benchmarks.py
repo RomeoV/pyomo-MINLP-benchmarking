@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 from datetime import datetime
-from julian_datetime import get_julian_datetime
+from util.julian_datetime import get_julian_datetime
 from csv import writer as csv_writer
 from argparse import ArgumentParser
 from contextlib import contextmanager
@@ -10,8 +10,7 @@ from importlib import import_module
 from pyomo.environ import SolverFactory
 from pyomo.opt import SolverStatus
 from pyomo.opt import TerminationCondition as tc
-# from feasability_pump import do_the_solving
-from parse_to_gams import (termination_condition_to_gams_format,
+from util.parse_to_gams import (termination_condition_to_gams_format,
       solver_status_to_gams)
 
 
@@ -92,10 +91,11 @@ def benchmark_model(timelimit):
         opt = SolverFactory(args.solver_name)
         opt.CONFIG.logger.propagate = False
         opt.CONFIG.logger.addHandler(logging.FileHandler(sys.stdout.name, mode = sys.stdout.mode))
+        model = model_scope.m
         if args.solver_strategy is None:
-            results = opt.solve(model_scope.m, tee=True, time_limit=timelimit)
+            results = opt.solve(model, tee=True, time_limit=timelimit)
         else:
-            results = opt.solve(model_scope.m, tee=True, time_limit=timelimit,
+            results = opt.solve(model, tee=True, time_limit=timelimit,
                                 strategy=args.solver_strategy)
         del opt.CONFIG.logger.handlers[0]
         solving_time = results.Solver[0].Wallclock_time
