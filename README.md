@@ -18,5 +18,5 @@ python run_benchmarks.py --solver mindtpy --model-dir models --redo-existing --n
 ```
 After running, the `results/<solver>` dir will contain
 - a `.txt` file for each model output
-- `trace_file.trc` which can be loaded into ??? to generate automatic benchmarking plots (not yet tested)
+- `trace_file.trc` which can be loaded into [Paver](https://github.com/coin-or/Paver) to generate automatic benchmarking plots (not yet tested)
 - `solving_times.csv` which contains the model name, aswell as the solving time or the termination condition/error
