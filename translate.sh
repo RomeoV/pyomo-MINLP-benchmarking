@@ -2,10 +2,11 @@
 
 GAMS="gams"
 if [ $USER == debernal ] ; then
-    INSTANCEDIR=/home/debernal/Perspective/instances
+    INSTANCEDIR=/home/bernalde/MINLPLib/data/gms
 else
-    INSTANCEDIR=/home/bernalde/MINLPLib/minlplib/gms
+    INSTANCEDIR=/home/bernalde/MINLPLib/data/gms
 fi
+
 TESTSET="convex"
 SKIPEXISTING=1   # whether to skip runs for which a trace file already exists
 
@@ -21,7 +22,7 @@ INSTANCES=`cut -d" " -f1 ${TESTSET}.txt`
 function runinstance ()
 {
    TRACEFILE=${TESTSET}.trc/$1.$2.$3.trc
-   
+
    if [ $SKIPEXISTING == 1 ] && [ -e $TRACEFILE ] ; then
       echo "Skip solver $2 with option file $3 on instance $1"
       return
@@ -31,7 +32,7 @@ function runinstance ()
 
    mkdir -p ${TESTSET}.trc
    mkdir -p ${TESTSET}.log
-   
+
    # initialize trace files
    cat > $TRACEFILE <<EOF
 * Trace Record Definition
@@ -40,15 +41,15 @@ function runinstance ()
 * ModelStatus,SolverStatus,ObjectiveValue,ObjectiveValueEstimate,SolverTime,ETSolver,NumberOfIterations,NumberOfNodes
 EOF
 
-   
+
    if [ $USER == bernalde ] ; then
       $GAMS ${INSTANCEDIR}/$1 MINLP=$2 MIQCP=$2 OPTFILE=$3 $GAMSOPTS LF=${TESTSET}.log/$1.$2.$3.log O=${TESTSET}.log/$1.$2.$3.lst TRACE=$TRACEFILE
-   
-      # change name of gams.py into actual instance name .py
-      mv gams.py ./models/$1.py
 
-   else
-       
+      # change name of gams.py into actual instance name .py
+      mv gams.py ./models_all/$1.py
+
+   # else
+
    fi
 }
 
