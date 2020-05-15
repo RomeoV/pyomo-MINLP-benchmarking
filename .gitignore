@@ -106,4 +106,5 @@ venv.bak/
 
 # results
 results/mindtpy/
+results/mindtpy-LPNLP/
 run_mindtpy_test.sh
