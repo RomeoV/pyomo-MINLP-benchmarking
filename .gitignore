@@ -106,3 +106,4 @@ venv.bak/
 
 # results
 results/mindtpy/
+run_mindtpy_test.sh

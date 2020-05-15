@@ -172,32 +172,32 @@ if __name__ == '__main__':
     print(f"Solving times will be written to '{solving_times_file}'")
     print('################################')
 
-    for model_file in model_files:
-        model_name, _ = os.path.splitext(model_file)  # removes ending
-        result_file = './results/'+solver_dir+'/'+model_name+'.txt'
+    with open(trace_file, 'w') as trace_file_obj:
+        for model_file in model_files:
+            model_name, _ = os.path.splitext(model_file)  # removes ending
+            result_file = './results/'+solver_dir+'/'+model_name+'.txt'
 
-        if args.skip_existing and os.path.exists(result_file):
-            print(f"Skipping '{result_file}'")
-            print(
-                "File exists already, please use the '--redo-existing' flag to override")
-            continue
+            if args.skip_existing and os.path.exists(result_file):
+                print(f"Skipping '{result_file}'")
+                print(
+                    "File exists already, please use the '--redo-existing' flag to override")
+                continue
 
-        elif args.skip_failed and model_file in prev_failed_models:
-            print(f"Skipping '{result_file}'")
-            print(
-                "File listed in 'failed_models.txt', please use the '--no-skip-failed' flag to override")
-            continue
+            elif args.skip_failed and model_file in prev_failed_models:
+                print(f"Skipping '{result_file}'")
+                print(
+                    "File listed in 'failed_models.txt', please use the '--no-skip-failed' flag to override")
+                continue
 
-        else:
-            print(f"Benchmarking '{model_file}'")
-            # This causes all stdout to be written to the results file
-            # and the model to be loaded as model_scope.m
-            with open(result_file, 'w') as result_file_obj, \
-                    open(error_file, 'a') as error_file_obj, \
-                    open(trace_file, 'a') as trace_file_obj, \
-                    redirect_stdout(result_file_obj), \
-                    load_model(model_name):
-                benchmark_model(args.timelimit)
+            else:
+                print(f"Benchmarking '{model_file}'")
+                # This causes all stdout to be written to the results file
+                # and the model to be loaded as model_scope.m
+                with open(result_file, 'w') as result_file_obj, \
+                        open(error_file, 'a') as error_file_obj, \
+                        redirect_stdout(result_file_obj), \
+                        load_model(model_name):
+                    benchmark_model(args.timelimit)
 
     with open(solving_times_file, 'w') as time_file:
         time_writer = csv_writer(time_file)
