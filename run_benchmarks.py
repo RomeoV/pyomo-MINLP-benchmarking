@@ -12,6 +12,7 @@ from pyomo.opt import SolverStatus
 from pyomo.opt import TerminationCondition as tc
 from util.parse_to_gams import (termination_condition_to_gams_format,
                                 solver_status_to_gams)
+from datetime import datetime
 
 
 def parse_command_line_arguments():
@@ -27,10 +28,10 @@ def parse_command_line_arguments():
                         metavar='solver_name',
                         choices=['baron', 'mindtpy', 'feas-pump'])
     parser.add_argument('--strategy', dest='solver_strategy', type=str,
-                        required=False, metavar='solver_strategy',
+                        required=False, metavar='solver_strategy', default="OA",
                         help='Solver strategy (if applicable)')
     parser.add_argument('--timelimit', dest='timelimit', type=int,
-                        required=False, metavar='timelimit', default=10,
+                        required=False, metavar='timelimit', default=60,
                         help='Time limit (sec) for each model')
     parser.add_argument('--model-dir', dest='model_dir', default='models',
                         required=False, metavar='model_dir',
@@ -38,6 +39,12 @@ def parse_command_line_arguments():
     parser.add_argument('--single-tree', dest='single_tree', default=False,
                         action='store_const', const=True,
                         help='Call single-tree implementation of MindtPy')
+    parser.add_argument('--feasibility-norm', dest='feasibility_norm', type=str, default='L1',
+                        required=False, metavar='feasibility_norm', choices=['L1', 'L2', 'L_infinity'])
+    parser.add_argument('--mip-solver', dest='mip_solver', type=str, default='gurobi',
+                        required=False, metavar='mip_solver')
+    parser.add_argument('--nlp-solver', dest='nlp_solver', type=str, default='ipopt',
+                        required=False, metavar='nlp_solver')
     return parser.parse_args()
 
 
@@ -65,8 +72,8 @@ def construct_trace_data(opt, results):
             model_name,  # GAMS model filename
             'MINLP',     # LP, MIP, NLP, etc.
             solver['Name'] + ("LPNLP" if args.single_tree == True else ""),
-            opt.CONFIG.nlp_solver,  # default NLP solver
-            opt.CONFIG.mip_solver,  # default MIP solver
+            args.nlp_solver,  # default NLP solver
+            args.mip_solver,  # default MIP solver
             get_julian_datetime(datetime.now()),  # start day/time of job
             # direction 0=min, 1=max
             0 if (problem['Sense'] ==
@@ -104,12 +111,18 @@ def benchmark_model(timelimit):
         opt.CONFIG.logger.addHandler(logging.FileHandler(
             sys.stdout.name, mode=sys.stdout.mode))
         model = model_scope.m
-        if args.solver_strategy is None:
-            results = opt.solve(model, tee=True, time_limit=timelimit,
-                                single_tree=args.single_tree)
-        else:
-            results = opt.solve(model, tee=True, time_limit=timelimit,
-                                strategy=args.solver_strategy, single_tree=args.single_tree)
+        results = opt.solve(model, tee=True, time_limit=timelimit,
+                            mip_solver=args.mip_solver,
+                            nlp_solver=args.nlp_solver,
+                            strategy=args.solver_strategy,
+                            feasibility_norm=args.feasibility_norm,
+                            single_tree=args.single_tree)
+        # if args.solver_strategy is None:
+        #     results = opt.solve(model, tee=True, time_limit=timelimit,
+        #                         single_tree=args.single_tree)
+        # else:
+        #     results = opt.solve(model, tee=True, time_limit=timelimit,
+        #                         strategy=args.solver_strategy, single_tree=args.single_tree)
         del opt.CONFIG.logger.handlers[0]
         solving_time = results.Solver[0].Wallclock_time
         print(f'Solving time: {solving_time}\n')
@@ -134,6 +147,7 @@ def benchmark_model(timelimit):
 
 if __name__ == '__main__':
     args = parse_command_line_arguments()
+    current_time = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
     ####### SETUP (directories and files) #######
     sys.path.insert(0, './'+args.model_dir)  # necessary to import models
 
@@ -146,7 +160,7 @@ if __name__ == '__main__':
         os.listdir(args.model_dir)) if model_file.endswith('.py')]
     solver_dir = args.solver_name + \
         (f"-{args.solver_strategy}" if args.solver_strategy else "") + \
-        ("-LPNLP" if args.single_tree else "")
+        ("-LPNLP" if args.single_tree else "" + current_time)
     error_file = f"./results/{solver_dir}/failed_models.txt"
     trace_file = f"./results/{solver_dir}/trace_file.trc"
     solving_times_file = f"./results/{solver_dir}/solving_times.csv"
