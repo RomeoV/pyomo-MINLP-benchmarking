@@ -41,10 +41,17 @@ def parse_command_line_arguments():
                         help='Call single-tree implementation of MindtPy')
     parser.add_argument('--feasibility-norm', dest='feasibility_norm', type=str, default='L1',
                         required=False, metavar='feasibility_norm', choices=['L1', 'L2', 'L_infinity'])
+    parser.add_argument('--differentiate-mode', dest='differentiate_mode', type=str, default="reverse_symbolic",
+                        required=False, metavar='differentiate_mode', choices=["reverse_symbolic", "sympy"])
     parser.add_argument('--mip-solver', dest='mip_solver', type=str, default='gurobi',
                         required=False, metavar='mip_solver')
+    parser.add_argument('--linearize-inactive', dest='linearize_inactive', default=False,
+                        action='store_const', const=True,
+                        help='Add OA cuts for all constriants no matter active or inactive')
     parser.add_argument('--nlp-solver', dest='nlp_solver', type=str, default='ipopt',
                         required=False, metavar='nlp_solver')
+    parser.add_argument('--method-name', dest='method_name', type=str, default='',
+                        required=False, metavar='method_name')
     return parser.parse_args()
 
 
@@ -71,13 +78,14 @@ def construct_trace_data(opt, results):
         trace_data = [
             model_name,  # GAMS model filename
             'MINLP',     # LP, MIP, NLP, etc.
-            solver['Name'] + ("LPNLP" if args.single_tree == True else ""),
+            solver['Name'] + ("LPNLP" if args.single_tree ==
+                              True else "")+args.method_name,
             args.nlp_solver,  # default NLP solver
             args.mip_solver,  # default MIP solver
             get_julian_datetime(datetime.now()),  # start day/time of job
             # direction 0=min, 1=max
             0 if (problem['Sense'] ==
-                  1 or problem['Sense'].key == 'minimize') else 1,
+                  1 or problem['Sense'] == 'minimize') else 1,
             # total number of equations
             results['Problem'][0]['Number of constraints'],
             # total number of variables
@@ -93,7 +101,7 @@ def construct_trace_data(opt, results):
             solver_status_to_gams(solver.Status) if solver.Status is SolverStatus.ok else termination_condition_to_gams_format(
                 solver.Termination_condition),
             problem['Upper bound'],  # value of objecive function
-            problem['Upper bound'],  # objective function estimate
+            problem['Lower bound'],  # objective function estimate
             solver['Wallclock time'],  # resource time used (sec)
             # number of solver iterations
             solver['Iterations'] if args.single_tree == False else solver['Num nodes'],
@@ -116,6 +124,8 @@ def benchmark_model(timelimit):
                             nlp_solver=args.nlp_solver,
                             strategy=args.solver_strategy,
                             feasibility_norm=args.feasibility_norm,
+                            differentiate_mode=args.differentiate_mode,
+                            linearize_inactive=args.linearize_inactive,
                             single_tree=args.single_tree)
         # if args.solver_strategy is None:
         #     results = opt.solve(model, tee=True, time_limit=timelimit,
@@ -147,7 +157,7 @@ def benchmark_model(timelimit):
 
 if __name__ == '__main__':
     args = parse_command_line_arguments()
-    current_time = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     ####### SETUP (directories and files) #######
     sys.path.insert(0, './'+args.model_dir)  # necessary to import models
 

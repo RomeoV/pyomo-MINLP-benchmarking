@@ -109,3 +109,6 @@ results/mindtpy/
 results/mindtpy-LPNLP/
 run_mindtpy_test.sh
 results/
+test.py
+models_all_solvable/
+.vscode/
