@@ -13,6 +13,8 @@ from pyomo.opt import TerminationCondition as tc
 from util.parse_to_gams import (termination_condition_to_gams_format,
                                 solver_status_to_gams)
 from datetime import datetime
+import sys
+sys.setrecursionlimit(100000)
 
 
 def parse_command_line_arguments():
@@ -52,6 +54,8 @@ def parse_command_line_arguments():
                         required=False, metavar='nlp_solver')
     parser.add_argument('--method-name', dest='method_name', type=str, default='',
                         required=False, metavar='method_name')
+    parser.add_argument('--iteration-limit', dest='iteration_limit', type=int, default=30,
+                        required=False, metavar='iteration_limit')
     return parser.parse_args()
 
 
@@ -126,7 +130,8 @@ def benchmark_model(timelimit):
                             feasibility_norm=args.feasibility_norm,
                             differentiate_mode=args.differentiate_mode,
                             linearize_inactive=args.linearize_inactive,
-                            single_tree=args.single_tree)
+                            single_tree=args.single_tree,
+                            iteration_limit=args.iteration_limit)
         # if args.solver_strategy is None:
         #     results = opt.solve(model, tee=True, time_limit=timelimit,
         #                         single_tree=args.single_tree)

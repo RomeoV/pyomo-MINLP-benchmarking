@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-GAMS="gams"
+GAMS="GAMS"
 if [ $USER == debernal ] ; then
     INSTANCEDIR=/home/bernalde/MINLPLib/data/gms
 else
-    INSTANCEDIR=/home/bernalde/MINLPLib/data/gms
+    INSTANCEDIR=/Users/zedongpeng/Documents/CMU/MindtPy/minlplib/gms 
 fi
 
-TESTSET="convex"
-SKIPEXISTING=1   # whether to skip runs for which a trace file already exists
+TESTSET="nonconvex"
+SKIPEXISTING=0   # whether to skip runs for which a trace file already exists
 
 GAMSOPTS="reslim=100 threads=1"
 # TODO memlimit?
@@ -42,15 +42,15 @@ function runinstance ()
 EOF
 
 
-   if [ $USER == bernalde ] ; then
+   # if [ $USER == bernalde ] ; then
       $GAMS ${INSTANCEDIR}/$1 MINLP=$2 MIQCP=$2 OPTFILE=$3 $GAMSOPTS LF=${TESTSET}.log/$1.$2.$3.log O=${TESTSET}.log/$1.$2.$3.lst TRACE=$TRACEFILE
 
       # change name of gams.py into actual instance name .py
-      mv gams.py ./models_all/$1.py
+      mv gams.py ./models_nonconvex_simple/$1.py
 
    # else
 
-   fi
+   # fi
 }
 
 # run a solver/option-file combination on the set of instances

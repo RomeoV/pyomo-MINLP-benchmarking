@@ -3,8 +3,8 @@ from pyomo.environ import *
 model = m = ConcreteModel()
 
 
-m.x1 = Var(within=Reals, bounds=(0, None))
-m.x2 = Var(within=Reals, bounds=(0, None))
+m.x1 = Var(within=Reals, bounds=(0, 10))
+m.x2 = Var(within=Reals, bounds=(0, 10))
 m.y1 = Var(within=Binary, bounds=(0, 1), initialize=0)
 m.y2 = Var(within=Binary, bounds=(0, 1), initialize=0)
 m.y3 = Var(within=Binary, bounds=(0, 1), initialize=0)
